@@ -1,0 +1,51 @@
+{
+  "name": "pollen-solutions/tiny-mce",
+  "description": "TinyMCE Component",
+  "homepage": "https://www.presstify.com/pollen-solutions/tiny-mce/",
+  "keywords": [
+    "presstify",
+    "plugins",
+    "wordpress",
+    "tinyMCE",
+    "wysiwyg editor"
+  ],
+  "time": "2020-12-30",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jordy Manner",
+      "email": "jordy@presstify.com",
+      "role": "Developper"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://composer.presstify.com/pollen-solutions/"
+    }
+  ],
+  "require": {
+    "composer/installers": "~1.0",
+    "fortawesome/font-awesome": "^4.7"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pollen\\TinyMce\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Pollen\\TinyMce\\Test\\": "tests"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  }
+}

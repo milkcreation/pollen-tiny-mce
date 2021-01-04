@@ -5,10 +5,8 @@ namespace Pollen\TinyMce;
 use tiFy\Container\ServiceProvider;
 use Pollen\TinyMce\Adapters\WordpressAdapter;
 use Pollen\TinyMce\Contracts\TinyMceContract;
-use Pollen\TinyMce\Plugins\DashiconsPlugin;
 use Pollen\TinyMce\Plugins\FontawesomePlugin;
 use Pollen\TinyMce\Plugins\GlyphsPlugin;
-use Pollen\TinyMce\Plugins\JumplinePlugin;
 use Pollen\TinyMce\Plugins\TablePlugin;
 use Pollen\TinyMce\Plugins\TemplatePlugin;
 use Pollen\TinyMce\Plugins\VisualblocksPlugin;
@@ -20,10 +18,8 @@ class TinyMceServiceProvider extends ServiceProvider
      */
     protected $provides = [
         TinyMceContract::class,
-        DashiconsPlugin::class,
         FontawesomePlugin::class,
         GlyphsPlugin::class,
-        JumplinePlugin::class,
         TablePlugin::class,
         TemplatePlugin::class,
         VisualblocksPlugin::class,
@@ -81,17 +77,11 @@ class TinyMceServiceProvider extends ServiceProvider
      */
     public function registerPlugins(): void
     {
-        $this->getContainer()->add(DashiconsPlugin::class, function () {
-            return new DashiconsPlugin($this->getContainer()->get(TinyMceContract::class));
-        });
         $this->getContainer()->add(FontawesomePlugin::class, function () {
             return new FontawesomePlugin($this->getContainer()->get(TinyMceContract::class));
         });
         $this->getContainer()->add(GlyphsPlugin::class, function () {
             return new GlyphsPlugin($this->getContainer()->get(TinyMceContract::class));
-        });
-        $this->getContainer()->add(JumplinePlugin::class, function () {
-            return new JumplinePlugin($this->getContainer()->get(TinyMceContract::class));
         });
         $this->getContainer()->add(TablePlugin::class, function () {
             return new TablePlugin($this->getContainer()->get(TinyMceContract::class));

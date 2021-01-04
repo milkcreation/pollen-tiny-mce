@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce\Plugins;
 
-class GlyphsPlugin extends AbstractGlyphsPlugin
+use Pollen\TinyMce\GlyphsPluginDriver;
+
+/**
+ * @todo
+ */
+class GlyphsPlugin extends GlyphsPluginDriver
 {
-    /**
-     * @inheritDoc
-     */
-    public function boot()
-    {
-        parent::boot();
-
-        add_action('wp_ajax_tify_tinymce_external_plugins_ownglyphs', [$this, 'wp_ajax']);
-    }
-
     /**
      * Mise en file de scripts de l'interface d'administration.
      *
@@ -39,25 +34,6 @@ class GlyphsPlugin extends AbstractGlyphsPlugin
             "i.mce-i-ownglyphs::before{content:'{$this->glyphs[$this->get('button')]}';}" .
             "i.mce-i-ownglyphs::before,.mce-grid a.ownglyphs{font-family:'{$this->get('font-family')}'!important;}"
         );
-    }
-
-    /**
-     * Ajout de styles dans l'éditeur tinyMCE.
-     *
-     * @param string $mce_css Liste des url vers les feuilles de styles associées à tinyMCE.
-     *
-     * @return string
-     */
-    public function mce_css($mce_css)
-    {
-        if ($this->get('editor_enqueue_scripts')) {
-            $mce_css .= ', ' . url()->root($this->get('path'));
-        }
-
-        return $mce_css . ', ' . $this->tinyMce()->getPluginAssetsUrl($this->getName()) . '/css/editor.css, ' .
-            admin_url(
-                'admin-ajax.php?action=tify_tinymce_external_plugins_ownglyphs&bogus=' . current_time('timestamp')
-            );
     }
 
     /**

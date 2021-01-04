@@ -2,8 +2,9 @@
 
 namespace Pollen\TinyMce\Contracts;
 
+use League\Route\Http\Exception\NotFoundException;
 use Pollen\TinyMce\Adapters\AdapterInterface;
-use Pollen\TinyMce\Plugins\PluginInterface;
+use Pollen\TinyMce\PluginDriverInterface;
 use tiFy\Contracts\Filesystem\LocalFilesystem;
 use tiFy\Contracts\Support\ParamsBag;
 
@@ -38,6 +39,15 @@ interface TinyMceContract
     public function config($key = null, $default = null);
 
     /**
+     * Récupération de la liste des boutons de plugins externes déclarés dans la configuration.
+     *
+     * @param string $buttonsDefinition
+     *
+     * @return static
+     */
+    public function fetchToolbarButtons(string $buttonsDefinition): TinyMceContract;
+
+    /**
      * Récupération de l'instance de l'adapteur.
      *
      * @return AdapterInterface|null
@@ -45,31 +55,84 @@ interface TinyMceContract
     public function getAdapter(): ?AdapterInterface;
 
     /**
-     * Récupération de l'url vers les assets d'un plugin.
+     * Récupération de la liste des paramètres généraux de tinyMce.
      *
-     * @param string $name Nom de qualification du plugin.
+     * @return array
+     */
+    public function getMceInit(): array;
+
+    /**
+     * Récupération de l'instance d'un plugin.
+     *
+     * @param string $alias
+     * @param array|null $params
+     *
+     * @return PluginDriverInterface|null
+     */
+    public function getPlugin(string $alias, array $params = []): ?PluginDriverInterface;
+
+    /**
+     * Récupération de la liste des plugins déclarés.
+     *
+     * @return PluginDriverInterface[]|array
+     */
+    public function getPlugins(): array;
+
+    /**
+     * Récupération de l'url de traitement des requêtes XHR.
+     *
+     * @param string $plugin Alias de qualification du pilote associé.
+     * @param string|null $controller Nom de qualification du controleur de traitement de la requête XHR.
+     * @param array $params Liste de paramètres complémentaire transmis dans l'url
      *
      * @return string
      */
-    public function getPluginAssetsUrl(string $name): string;
+    public function getXhrRouteUrl(string $plugin, ?string $controller = null, array $params = []): string;
 
     /**
-     * Récupération de l'url vers le scripts d'un plugin.
+     * Vérification d'existance d'un bouton déclaré.
      *
-     * @param string $name Nom de qualification du plugin.
+     * @param string $button
      *
-     * @return string
+     * @return bool
      */
-    public function getPluginUrl(string $name): string;
+    public function hasButton(string $button): bool;
 
     /**
-     * Récupération de la liste des boutons de plugins externes déclarés dans la configuration.
+     * Vérification d'existance d'un plugin déclaré.
      *
-     * @param string $buttons Liste des boutons définis dans la configuration.
+     * @param string $alias
      *
-     * @return void
+     * @return bool
      */
-    public function fetchPluginsButtons($buttons = ''): void;
+    public function hasPlugin(string $alias): bool;
+
+    /**
+     * Chargement des plugins.
+     *
+     * @return static
+     */
+    public function loadPlugins(): TinyMceContract;
+
+    /**
+     * Déclaration d'un plugin par défaut.
+     *
+     * @param string $alias
+     * @param PluginDriverInterface|string $pluginDefinition
+     *
+     * @return static
+     */
+    public function registerDefaultPlugin(string $alias, $pluginDefinition): TinyMceContract;
+
+    /**
+     * Déclaration d'un plugin.
+     *
+     * @param string $alias
+     * @param PluginDriverInterface|string $pluginDefinition
+     *
+     * @return static
+     */
+    public function registerPlugin(string $alias, $pluginDefinition): TinyMceContract;
 
     /**
      * Chemin absolu vers une ressources (fichier|répertoire).
@@ -90,13 +153,13 @@ interface TinyMceContract
     public function setAdapter(AdapterInterface $adapter): TinyMceContract;
 
     /**
-     * Définition des attributs de configuration additionnels.
+     * Définition des paramètres de configuration généraux de tinyMCE.
      *
-     * @param array $config Liste des attributs de configuration additionnels.
+     * @param array $mceInit
      *
      * @return static
      */
-    public function setAdditionnalConfig(array $config): TinyMceContract;
+    public function setMceInit(array $mceInit): TinyMceContract;
 
     /**
      * Définition des paramètres de configuration.
@@ -108,11 +171,15 @@ interface TinyMceContract
     public function setConfig(array $attrs): TinyMceContract;
 
     /**
-     * Déclaration d'un plugin.
+     * Répartiteur de traitement d'une requête XHR.
      *
-     * @param PluginInterface $plugin
+     * @param string $pluginAlias Alias de qualification du pilote associé.
+     * @param string $controller Nom de qualification du controleur de traitement de la requête.
+     * @param mixed ...$args Liste des arguments passés au controleur
      *
-     * @return static
+     * @return array
+     *
+     * @throws NotFoundException
      */
-    public function setPlugin(PluginInterface $plugin): TinyMceContract;
+    public function xhrResponseDispatcher(string $pluginAlias, string $controller, ...$args): array;
 }

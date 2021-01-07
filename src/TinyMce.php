@@ -281,7 +281,7 @@ class TinyMce implements TinyMceContract
      */
     public function loadPlugins(): TinyMceContract
     {
-        foreach ($this->config('plugins') as $alias => $params) {
+        foreach ($this->config('plugins', []) as $alias => $params) {
             if (is_numeric($alias)) {
                 $alias  = (string)$params;
                 $params = [];

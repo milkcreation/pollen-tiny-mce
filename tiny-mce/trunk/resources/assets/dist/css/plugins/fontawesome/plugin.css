@@ -1,30 +1,9 @@
-i.mce-i-fontawesome:before {
+.fontawesome {
+    font-family: "fontAwesome";
     display: inline-block;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
     -webkit-font-smoothing: antialiased;
-    text-align: center;
-    font-weight: 400;
-    font-size: 20px;
-    line-height: 1;
-    speak: none;
-    vertical-align: top;
-}
-
-.mce-grid a.fontawesome {
-    font-weight: 400;
-    font-size: 24px;
-    line-height: 1;
-    padding: 2px;
-    text-align: center;
-    display: inline-block;
-}
-
-.mce-grid a.fontawesome:hover,
-.mce-grid a.fontawesome:active,
-.mce-grid a.fontawesome:focus {
-
-}
-
-.mce-grid a.fontawesome:hover {
-    cursor: pointer;
-    border-color: transparent;
+    -moz-osx-font-smoothing: grayscale;
 }

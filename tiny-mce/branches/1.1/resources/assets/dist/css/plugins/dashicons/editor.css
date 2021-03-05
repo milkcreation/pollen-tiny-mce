@@ -1,0 +1,33 @@
+i.mce-i-dashicons::before {
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    text-align: center;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1;
+    speak: none;
+    vertical-align: top;
+}
+
+.mce-grid a.dashicons {
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1;
+    padding: 2px;
+    text-align: center;
+    display: inline-block;
+    color:#666;
+}
+
+.mce-grid a.dashicons:active,
+.mce-grid a.dashicons:focus {
+    color:#666;
+}
+
+.mce-grid a.dashicons:hover {
+    cursor: pointer;
+    border-color: transparent;
+    text-decoration:none;
+    color:#3B3B3B;
+    transform: scale(1.5);
+}

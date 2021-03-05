@@ -1,73 +1,71 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
 use Exception;
 use InvalidArgumentException;
 use League\Route\Http\Exception\NotFoundException;
+use Pollen\Routing\RouteInterface;
+use Pollen\Support\Concerns\BootableTrait;
+use Pollen\Support\Concerns\ConfigBagAwareTrait;
+use Pollen\Support\Filesystem;
+use Pollen\Support\Proxy\ContainerProxy;
+use Pollen\Support\Proxy\EventProxy;
+use Pollen\Support\Proxy\RouterProxy;
 use RuntimeException;
-use Pollen\TinyMce\Adapters\AdapterInterface;
-use Pollen\TinyMce\Contracts\TinyMceContract;
 use Pollen\TinyMce\Plugins\FontawesomePlugin;
 use Pollen\TinyMce\Plugins\GlyphsPlugin;
 use Pollen\TinyMce\Plugins\TablePlugin;
 use Pollen\TinyMce\Plugins\TemplatePlugin;
 use Pollen\TinyMce\Plugins\VisualblocksPlugin;
 use Psr\Container\ContainerInterface as Container;
-use tiFy\Contracts\Filesystem\LocalFilesystem;
-use tiFy\Contracts\Routing\Route;
-use tiFy\Support\Concerns\BootableTrait;
-use tiFy\Support\Concerns\ContainerAwareTrait;
-use tiFy\Support\ParamsBag;
-use tiFy\Support\Proxy\Router;
-use tiFy\Support\Proxy\Storage;
 
-class TinyMce implements TinyMceContract
+
+class TinyMce implements TinyMceInterface
 {
     use BootableTrait;
-    use ContainerAwareTrait;
+    use ConfigBagAwareTrait;
+    use ContainerProxy;
+    use EventProxy;
+    use RouterProxy;
 
     /**
-     * Instance de la classe.
+     * Instance principale.
      * @var static|null
      */
     private static $instance;
 
     /**
      * Instance de l'adapteur associé.
-     * @var AdapterInterface
+     * @var TinyMceAdapterInterface
      */
     private $adapter;
-
-    /**
-     * Instance du gestionnaire de configuration.
-     * @var ParamsBag
-     */
-    private $configBag;
 
     /**
      * Liste des plugins par défaut.
      * @var array
      */
     private $defaultPlugins = [
-        'fontawesome'   => FontawesomePlugin::class,
-        'glyphs'        => GlyphsPlugin::class,
-        'table'         => TablePlugin::class,
-        'template'      => TemplatePlugin::class,
-        'visualblocks'  => VisualblocksPlugin::class
+        'fontawesome'  => FontawesomePlugin::class,
+        'glyphs'       => GlyphsPlugin::class,
+        'table'        => TablePlugin::class,
+        'template'     => TemplatePlugin::class,
+        'visualblocks' => VisualblocksPlugin::class,
     ];
 
     /**
-     * Instance du gestionnaire des ressources
-     * @var LocalFilesystem|null
+     * Chemin vers le répertoire des ressources.
+     * @var string|null
      */
-    private $resources;
+    protected $resourcesBaseDir;
 
     /**
      * Route de traitement des requêtes XHR.
-     * @var Route|null
+     * @var RouteInterface|null
      */
-    private $xhrRoute;
+    protected $xhrRoute;
 
     /**
      * Liste des boutons de plugin déclarés.
@@ -107,35 +105,42 @@ class TinyMce implements TinyMceContract
             $this->setContainer($container);
         }
 
+        if ($this->config('boot_enabled', true)) {
+            $this->boot();
+        }
+
         if (!self::$instance instanceof static) {
             self::$instance = $this;
         }
     }
 
     /**
-     * @inheritDoc
+     * Récupération de l'instance principale.
+     *
+     * @return static
      */
-    public static function instance(): TinyMceContract
+    public static function getInstance(): TinyMceInterface
     {
         if (self::$instance instanceof self) {
             return self::$instance;
         }
-        throw new RuntimeException(sprintf('Unavailable %s instance', __CLASS__));
+        throw new RuntimeException(sprintf('Unavailable [%s] instance', __CLASS__));
     }
 
     /**
      * @inheritDoc
      */
-    public function boot(): TinyMceContract
+    public function boot(): TinyMceInterface
     {
         if (!$this->isBooted()) {
-            events()->trigger('tiny-mce.booting', [$this]);
+            $this->event()->trigger('tiny-mce.booting', [$this]);
 
-            $this->xhrRoute = Router::xhr(
-                md5('tinyMce') . '/{plugin}/{controller}',
-                [$this, 'xhrResponseDispatcher'],
-                'GET'
-            );
+            if ($router = $this->router()) {
+                $this->xhrRoute = $router->xhr(
+                    '/api/' . md5('tinyMce') . '/{plugin}/{controller}',
+                    [$this, 'xhrResponseDispatcher']
+                );
+            }
 
             foreach ($this->defaultPlugins as $alias => $pluginDefinition) {
                 $this->registerPlugin($alias, $pluginDefinition);
@@ -143,7 +148,7 @@ class TinyMce implements TinyMceContract
 
             $this->setBooted();
 
-            events()->trigger('tiny-mce.booted', [$this]);
+            $this->event()->trigger('tiny-mce.booted', [$this]);
         }
         return $this;
     }
@@ -151,25 +156,7 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function config($key = null, $default = null)
-    {
-        if (!isset($this->configBag) || is_null($this->configBag)) {
-            $this->configBag = new ParamsBag();
-        }
-
-        if (is_string($key)) {
-            return $this->configBag->get($key, $default);
-        } elseif (is_array($key)) {
-            return $this->configBag->set($key);
-        } else {
-            return $this->configBag;
-        }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function fetchToolbarButtons(string $buttonsDefinition): TinyMceContract
+    public function fetchToolbarButtons(string $buttonsDefinition): TinyMceInterface
     {
         $exists = preg_split('#\||\s#', $buttonsDefinition, -1, PREG_SPLIT_NO_EMPTY);
 
@@ -185,7 +172,7 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function getAdapter(): ?AdapterInterface
+    public function getAdapter(): ?TinyMceAdapterInterface
     {
         return $this->adapter;
     }
@@ -205,7 +192,9 @@ class TinyMce implements TinyMceContract
     {
         if ($this->hasPlugin($alias)) {
             return $this->plugins[$alias];
-        } elseif (isset($params['driver'])) {
+        }
+
+        if (isset($params['driver'])) {
             $this->registerPlugin($alias, $params['driver']);
             unset($params['driver']);
         }
@@ -232,13 +221,16 @@ class TinyMce implements TinyMceContract
 
         if ($def instanceof PluginDriverInterface) {
             return clone $def;
-        } elseif (is_string($def) && $this->containerHas($def)) {
-            if ($this->containerHas($def)) {
-                return $this->containerGet($def);
-            }
-        } elseif(is_string($def) && class_exists($def)) {
+        }
+
+        if (is_string($def) && $this->containerHas($def)) {
+            return $this->containerGet($def);
+        }
+
+        if (is_string($def) && class_exists($def)) {
             return new $def($this);
         }
+
         return null;
     }
 
@@ -253,11 +245,14 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function getXhrRouteUrl(string $plugin, ?string $controller = null, array $params = []): string
+    public function getXhrRouteUrl(string $plugin, ?string $controller = null, array $params = []): ?string
     {
-        $controller = $controller ?? 'xhrResponse';
+        if ($this->xhrRoute instanceof RouteInterface && ($router = $this->router())) {
+            $controller = $controller ?? 'xhrResponse';
 
-        return $this->xhrRoute->getUrl(array_merge($params, compact('plugin', 'controller')));
+            return $router->getRouteUrl($this->xhrRoute, array_merge($params, compact('plugin', 'controller')));
+        }
+        return null;
     }
 
     /**
@@ -279,11 +274,11 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function loadPlugins(): TinyMceContract
+    public function loadPlugins(): TinyMceInterface
     {
         foreach ($this->config('plugins', []) as $alias => $params) {
             if (is_numeric($alias)) {
-                $alias  = (string)$params;
+                $alias = (string)$params;
                 $params = [];
             }
 
@@ -297,7 +292,7 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function registerDefaultPlugin(string $alias, $pluginDefinition): TinyMceContract
+    public function registerDefaultPlugin(string $alias, $pluginDefinition): TinyMceInterface
     {
         $this->defaultPlugins[$alias] = $pluginDefinition;
 
@@ -307,7 +302,7 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function registerPlugin(string $alias, $pluginDefinition): TinyMceContract
+    public function registerPlugin(string $alias, $pluginDefinition): TinyMceInterface
     {
         if (isset($this->pluginDefinitions[$alias])) {
             throw new RuntimeException(sprintf('Another Plugin with alias [%s] already registered', $alias));
@@ -321,18 +316,27 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function resources(?string $path = null)
+    public function resources(?string $path = null): string
     {
-        if (!isset($this->resources) || is_null($this->resources)) {
-            $this->resources = Storage::local(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'resources');
+        if ($this->resourcesBaseDir === null) {
+            $this->resourcesBaseDir = Filesystem::normalizePath(
+                realpath(
+                    dirname(__DIR__) . '/resources/'
+                )
+            );
+
+            if (!file_exists($this->resourcesBaseDir)) {
+                throw new RuntimeException('Field ressources directory unreachable');
+            }
         }
-        return is_null($path) ? $this->resources : $this->resources->path($path);
+
+        return is_null($path) ? $this->resourcesBaseDir : $this->resourcesBaseDir . Filesystem::normalizePath($path);
     }
 
     /**
      * @inheritDoc
      */
-    public function setAdapter(AdapterInterface $adapter): TinyMceContract
+    public function setAdapter(TinyMceAdapterInterface $adapter): TinyMceInterface
     {
         $this->adapter = $adapter;
 
@@ -342,7 +346,7 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function setMceInit(array $mceInit): TinyMceContract
+    public function setMceInit(array $mceInit): TinyMceInterface
     {
         $this->mceInit = array_merge($this->mceInit, $mceInit);
 
@@ -352,9 +356,9 @@ class TinyMce implements TinyMceContract
     /**
      * @inheritDoc
      */
-    public function setConfig(array $attrs): TinyMceContract
+    public function setResourcesBaseDir(string $resourceBaseDir): TinyMceInterface
     {
-        $this->config($attrs);
+        $this->resourcesBaseDir = Filesystem::normalizePath($resourceBaseDir);
 
         return $this;
     }
@@ -366,17 +370,23 @@ class TinyMce implements TinyMceContract
     {
         try {
             $plugin = $this->getPlugin($pluginAlias);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             throw new NotFoundException(
                 sprintf('TinyMce Plugin [%s] return exception : %s', $pluginAlias, $e->getMessage())
             );
         }
-        try {
-            return $plugin->{$controller}(...$args);
-        } catch(Exception $e) {
-            throw new NotFoundException(
-                sprintf('TinyMce Plugin [%s] Controller [%s] call return exception', $controller, $pluginAlias)
-            );
+        if ($plugin !== null) {
+            try {
+                return $plugin->{$controller}(...$args);
+            } catch (Exception $e) {
+                throw new NotFoundException(
+                    sprintf('TinyMce Plugin [%s] Controller [%s] call return exception', $controller, $pluginAlias)
+                );
+            }
         }
+
+        throw new NotFoundException(
+            sprintf('TinyMce Plugin [%s] unreachable', $pluginAlias)
+        );
     }
 }

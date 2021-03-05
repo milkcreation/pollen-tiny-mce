@@ -55,9 +55,12 @@ abstract class GlyphsPluginDriver extends PluginDriver implements GlyphsPluginDr
                 $match
             )) {
             return $match[1];
-        } elseif (file_exists(ROOT_PATH . $glyphs)) {
+        }
+
+        if (file_exists(ROOT_PATH . $glyphs)) {
             return $glyphs;
         }
+
         return null;
     }
 
@@ -100,7 +103,7 @@ abstract class GlyphsPluginDriver extends PluginDriver implements GlyphsPluginDr
     {
         $items = array_map(
             function ($value) {
-                return preg_replace('#' . preg_quote('\\') . '#', '&#x', $value);
+                return preg_replace("/\/", '&#x', $value);
             },
             $this->glyphs
         );

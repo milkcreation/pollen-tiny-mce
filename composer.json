@@ -1,6 +1,6 @@
 {
   "name": "pollen-solutions/tiny-mce",
-  "description": "TinyMCE Component",
+  "description": "Pollen TinyMCE Component",
   "homepage": "https://www.presstify.com/pollen-solutions/tiny-mce/",
   "keywords": [
     "presstify",
@@ -9,7 +9,7 @@
     "tinyMCE",
     "wysiwyg editor"
   ],
-  "time": "2021-01-07",
+  "time": "2021-03-05",
   "license": "MIT",
   "authors": [
     {
@@ -26,7 +26,11 @@
   ],
   "require": {
     "composer/installers": "~1.0",
-    "fortawesome/font-awesome": "^4.7"
+    "fortawesome/font-awesome": "^4.7",
+    "pollen-solutions/asset": "^1.0",
+    "pollen-solutions/http": "^1.0",
+    "pollen-solutions/routing": "^1.0",
+    "pollen-solutions/support": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.0"

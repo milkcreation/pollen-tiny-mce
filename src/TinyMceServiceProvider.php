@@ -1,23 +1,24 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-use tiFy\Container\ServiceProvider;
+use Pollen\Container\BaseServiceProvider;
 use Pollen\TinyMce\Adapters\WordpressAdapter;
-use Pollen\TinyMce\Contracts\TinyMceContract;
 use Pollen\TinyMce\Plugins\FontawesomePlugin;
 use Pollen\TinyMce\Plugins\GlyphsPlugin;
 use Pollen\TinyMce\Plugins\TablePlugin;
 use Pollen\TinyMce\Plugins\TemplatePlugin;
 use Pollen\TinyMce\Plugins\VisualblocksPlugin;
 
-class TinyMceServiceProvider extends ServiceProvider
+class TinyMceServiceProvider extends BaseServiceProvider
 {
     /**
      * @inheritDoc
      */
     protected $provides = [
-        TinyMceContract::class,
+        TinyMceInterface::class,
         FontawesomePlugin::class,
         GlyphsPlugin::class,
         TablePlugin::class,
@@ -29,27 +30,12 @@ class TinyMceServiceProvider extends ServiceProvider
     /**
      * @inheritDoc
      */
-    public function boot(): void
-    {
-        events()->listen(
-            'wp.booted',
-            function () {
-                /** @var TinyMceContract $tinyMce */
-                $tinyMce = $this->getContainer()->get(TinyMceContract::class);
-                $tinyMce->setAdapter($this->getContainer()->get(WordpressAdapter::class))->boot();
-            }
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function register(): void
     {
         $this->getContainer()->share(
-            TinyMceContract::class,
+            TinyMceInterface::class,
             function () {
-                return new TinyMce(config('tiny-mce', []), $this->getContainer());
+                return new TinyMce([], $this->getContainer());
         });
         $this->registerAdapters();
         $this->registerPlugins();
@@ -65,7 +51,7 @@ class TinyMceServiceProvider extends ServiceProvider
         $this->getContainer()->share(
             WordpressAdapter::class,
             function () {
-                return new WordpressAdapter($this->getContainer()->get(TinyMceContract::class));
+                return new WordpressAdapter($this->getContainer()->get(TinyMceInterface::class));
             }
         );
     }
@@ -78,19 +64,19 @@ class TinyMceServiceProvider extends ServiceProvider
     public function registerPlugins(): void
     {
         $this->getContainer()->add(FontawesomePlugin::class, function () {
-            return new FontawesomePlugin($this->getContainer()->get(TinyMceContract::class));
+            return new FontawesomePlugin($this->getContainer()->get(TinyMceInterface::class));
         });
         $this->getContainer()->add(GlyphsPlugin::class, function () {
-            return new GlyphsPlugin($this->getContainer()->get(TinyMceContract::class));
+            return new GlyphsPlugin($this->getContainer()->get(TinyMceInterface::class));
         });
         $this->getContainer()->add(TablePlugin::class, function () {
-            return new TablePlugin($this->getContainer()->get(TinyMceContract::class));
+            return new TablePlugin($this->getContainer()->get(TinyMceInterface::class));
         });
         $this->getContainer()->add(TemplatePlugin::class, function () {
-            return new TemplatePlugin($this->getContainer()->get(TinyMceContract::class));
+            return new TemplatePlugin($this->getContainer()->get(TinyMceInterface::class));
         });
         $this->getContainer()->add(VisualblocksPlugin::class, function () {
-            return new VisualblocksPlugin($this->getContainer()->get(TinyMceContract::class));
+            return new VisualblocksPlugin($this->getContainer()->get(TinyMceInterface::class));
         });
     }
 }

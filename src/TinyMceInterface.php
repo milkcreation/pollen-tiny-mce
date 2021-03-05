@@ -1,42 +1,29 @@
-<?php declare(strict_types=1);
+<?php
 
-namespace Pollen\TinyMce\Contracts;
+declare(strict_types=1);
+
+namespace Pollen\TinyMce;
 
 use League\Route\Http\Exception\NotFoundException;
-use Pollen\TinyMce\Adapters\AdapterInterface;
-use Pollen\TinyMce\PluginDriverInterface;
-use tiFy\Contracts\Filesystem\LocalFilesystem;
-use tiFy\Contracts\Support\ParamsBag;
+use Pollen\Support\Concerns\BootableTraitInterface;
+use Pollen\Support\Concerns\ConfigBagAwareTraitInterface;
+use Pollen\Support\Proxy\ContainerProxyInterface;
+use Pollen\Support\Proxy\EventProxyInterface;
+use Pollen\Support\Proxy\RouterProxyInterface;
 
-/**
- * @mixin \tiFy\Support\Concerns\BootableTrait
- * @mixin \tiFy\Support\Concerns\ContainerAwareTrait
- */
-interface TinyMceContract
+interface TinyMceInterface extends
+    BootableTraitInterface,
+    ConfigBagAwareTraitInterface,
+    ContainerProxyInterface,
+    EventProxyInterface,
+    RouterProxyInterface
 {
-    /**
-     * Récupération de l'instance.
-     *
-     * @return static
-     */
-    public static function instance(): TinyMceContract;
-
     /**
      * Chargement.
      *
      * @return static
      */
-    public function boot(): TinyMceContract;
-
-    /**
-     * Récupération de paramètre|Définition de paramètres|Instance du gestionnaire de paramètre.
-     *
-     * @param string|array|null $key Clé d'indice du paramètre à récupérer|Liste des paramètre à définir.
-     * @param mixed $default Valeur de retour par défaut lorsque la clé d'indice est une chaine de caractère.
-     *
-     * @return ParamsBag|int|string|array|object
-     */
-    public function config($key = null, $default = null);
+    public function boot():TinyMceInterface;
 
     /**
      * Récupération de la liste des boutons de plugins externes déclarés dans la configuration.
@@ -45,14 +32,14 @@ interface TinyMceContract
      *
      * @return static
      */
-    public function fetchToolbarButtons(string $buttonsDefinition): TinyMceContract;
+    public function fetchToolbarButtons(string $buttonsDefinition): TinyMceInterface;
 
     /**
      * Récupération de l'instance de l'adapteur.
      *
-     * @return AdapterInterface|null
+     * @return TinyMceAdapterInterface|null
      */
-    public function getAdapter(): ?AdapterInterface;
+    public function getAdapter(): ?TinyMceAdapterInterface;
 
     /**
      * Récupération de la liste des paramètres généraux de tinyMce.
@@ -85,9 +72,9 @@ interface TinyMceContract
      * @param string|null $controller Nom de qualification du controleur de traitement de la requête XHR.
      * @param array $params Liste de paramètres complémentaire transmis dans l'url
      *
-     * @return string
+     * @return string|null
      */
-    public function getXhrRouteUrl(string $plugin, ?string $controller = null, array $params = []): string;
+    public function getXhrRouteUrl(string $plugin, ?string $controller = null, array $params = []): ?string;
 
     /**
      * Vérification d'existance d'un bouton déclaré.
@@ -99,7 +86,7 @@ interface TinyMceContract
     public function hasButton(string $button): bool;
 
     /**
-     * Vérification d'existance d'un plugin déclaré.
+     * Vérification d'existence d'un plugin déclaré.
      *
      * @param string $alias
      *
@@ -112,7 +99,7 @@ interface TinyMceContract
      *
      * @return static
      */
-    public function loadPlugins(): TinyMceContract;
+    public function loadPlugins(): TinyMceInterface;
 
     /**
      * Déclaration d'un plugin par défaut.
@@ -122,7 +109,7 @@ interface TinyMceContract
      *
      * @return static
      */
-    public function registerDefaultPlugin(string $alias, $pluginDefinition): TinyMceContract;
+    public function registerDefaultPlugin(string $alias, $pluginDefinition): TinyMceInterface;
 
     /**
      * Déclaration d'un plugin.
@@ -132,25 +119,34 @@ interface TinyMceContract
      *
      * @return static
      */
-    public function registerPlugin(string $alias, $pluginDefinition): TinyMceContract;
+    public function registerPlugin(string $alias, $pluginDefinition): TinyMceInterface;
 
     /**
-     * Chemin absolu vers une ressources (fichier|répertoire).
+     * Chemin absolu vers une ressource (fichier|répertoire).
      *
      * @param string|null $path Chemin relatif vers la ressource.
      *
-     * @return LocalFilesystem|string|null
+     * @return string
      */
-    public function resources(?string $path = null);
+    public function resources(?string $path = null): string;
+
+    /**
+     * Définition du chemin absolu vers le répertoire des ressources.
+     *
+     * @param string $resourceBaseDir
+     *
+     * @return static
+     */
+    public function setResourcesBaseDir(string $resourceBaseDir): TinyMceInterface;
 
     /**
      * Définition de l'adapteur associé.
      *
-     * @param AdapterInterface $adapter
+     * @param TinyMceAdapterInterface $adapter
      *
      * @return static
      */
-    public function setAdapter(AdapterInterface $adapter): TinyMceContract;
+    public function setAdapter(TinyMceAdapterInterface $adapter): TinyMceInterface;
 
     /**
      * Définition des paramètres de configuration généraux de tinyMCE.
@@ -159,16 +155,7 @@ interface TinyMceContract
      *
      * @return static
      */
-    public function setMceInit(array $mceInit): TinyMceContract;
-
-    /**
-     * Définition des paramètres de configuration.
-     *
-     * @param array $attrs Liste des attributs de configuration.
-     *
-     * @return static
-     */
-    public function setConfig(array $attrs): TinyMceContract;
+    public function setMceInit(array $mceInit): TinyMceInterface;
 
     /**
      * Répartiteur de traitement d'une requête XHR.

@@ -8,48 +8,51 @@ use Pollen\TinyMce\Adapters\Wordpress\Plugins\DashiconsPlugin;
 use Pollen\TinyMce\Adapters\Wordpress\Plugins\FontawesomePlugin;
 use Pollen\TinyMce\Adapters\Wordpress\Plugins\JumplinePlugin;
 use Pollen\TinyMce\PluginDriverInterface;
-use Pollen\TinyMce\Contracts\TinyMceContract;
+use Pollen\TinyMce\TinyMceInterface;
+use Pollen\TinyMce\AbstractTinyMceAdapter;
 use WP_User;
 
 class WordpressAdapter extends AbstractTinyMceAdapter
 {
     /**
-     * @param TinyMceContract $tinyMceManager
+     * @param TinyMceInterface $tinyMce
      */
-    public function __construct(TinyMceContract $tinyMceManager)
+    public function __construct(TinyMceInterface $tinyMce)
     {
-        parent::__construct($tinyMceManager);
+        parent::__construct($tinyMce);
 
         $this->tinyMce()
             ->registerDefaultPlugin('dashicons', DashiconsPlugin::class)
             ->registerDefaultPlugin('fontawesome', FontawesomePlugin::class)
             ->registerDefaultPlugin('jumpline', JumplinePlugin::class);
 
-        events()->listen(
+        $this->tinyMce()->event()->on(
             'tiny-mce.booting',
             function () {
-                $this->tinyMce()->getContainer()->add(
-                    DashiconsPlugin::class,
-                    function () {
-                        return new DashiconsPlugin($this->tinyMce());
-                    }
-                );
-                $this->tinyMce()->getContainer()->add(
-                    FontawesomePlugin::class,
-                    function () {
-                        return new FontawesomePlugin($this->tinyMce());
-                    }
-                );
-                $this->tinyMce()->getContainer()->add(
-                    JumplinePlugin::class,
-                    function () {
-                        return new JumplinePlugin($this->tinyMce());
-                    }
-                );
+                if ($container = $this->tinyMce()->getContainer()) {
+                    $container->add(
+                        DashiconsPlugin::class,
+                        function () {
+                            return new DashiconsPlugin($this->tinyMce());
+                        }
+                    );
+                    $container->add(
+                        FontawesomePlugin::class,
+                        function () {
+                            return new FontawesomePlugin($this->tinyMce());
+                        }
+                    );
+                    $container->add(
+                        JumplinePlugin::class,
+                        function () {
+                            return new JumplinePlugin($this->tinyMce());
+                        }
+                    );
+                }
             }
         );
 
-        events()->listen(
+        $this->tinyMce()->event()->on(
             'tiny-mce.plugin.booting',
             function (string $alias, PluginDriverInterface $plugin) {
                 $plugin->params([
@@ -181,9 +184,6 @@ class WordpressAdapter extends AbstractTinyMceAdapter
             $wp_user = wp_get_current_user();
         }
 
-        if (empty($wp_user)) {
-            return false;
-        }
         return ($wp_user->has_cap('edit_posts') || $wp_user->has_cap('edit_pages')) && get_user_option('rich_editing');
     }
 }

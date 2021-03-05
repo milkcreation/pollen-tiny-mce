@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce\Plugins;
 
-use Pollen\TinyMce\Contracts\TinyMceContract;
+use Pollen\Http\JsonResponse;
+use Pollen\Http\ResponseInterface;
+use Pollen\TinyMce\TinyMceInterface;
 use Pollen\TinyMce\PluginDriver;
 
 class TemplatePlugin extends PluginDriver
@@ -16,13 +18,13 @@ class TemplatePlugin extends PluginDriver
     protected $templates = [];
 
     /**
-     * @param TinyMceContract $tinyMceManager
+     * @param TinyMceInterface $tinyMce
      */
-    public function __construct(TinyMceContract $tinyMceManager)
+    public function __construct(TinyMceInterface $tinyMce)
     {
-        parent::__construct($tinyMceManager);
+        parent::__construct($tinyMce);
 
-        $baseurl = $this->tinyMce()->resources()->url('/views/plugins/template');
+        $baseurl = $this->tinyMce()->resources('/views/plugins/template');
 
         $this->templates = [
             [
@@ -122,8 +124,8 @@ class TemplatePlugin extends PluginDriver
     /**
      * @inheritDoc
      */
-    public function xhrResponse(...$args): array
+    public function xhrResponse(...$args): ResponseInterface
     {
-        return $this->getTemplates();
+        return new JsonResponse($this->getTemplates());
     }
 }

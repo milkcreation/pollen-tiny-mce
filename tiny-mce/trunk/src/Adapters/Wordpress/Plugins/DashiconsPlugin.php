@@ -5,17 +5,16 @@ declare(strict_types=1);
 namespace Pollen\TinyMce\Adapters\Wordpress\Plugins;
 
 use Pollen\TinyMce\Adapters\Wordpress\GlyphsPluginDriver;
-use Pollen\TinyMce\Contracts\TinyMceContract;
-use tiFy\Support\Proxy\Asset;
+use Pollen\TinyMce\TinyMceInterface;
 
 class DashiconsPlugin extends GlyphsPluginDriver
 {
     /**
-     * @param TinyMceContract $tinyMceManager
+     * @param TinyMceInterface $tinyMce
      */
-    public function __construct(TinyMceContract $tinyMceManager)
+    public function __construct(TinyMceInterface $tinyMce)
     {
-        parent::__construct($tinyMceManager);
+        parent::__construct($tinyMce);
 
         add_action(
             'admin_enqueue_scripts',

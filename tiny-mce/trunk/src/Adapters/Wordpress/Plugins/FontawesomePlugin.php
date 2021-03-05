@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce\Adapters\Wordpress\Plugins;
 
-use Pollen\TinyMce\Contracts\TinyMceContract;
 use Pollen\TinyMce\Adapters\Wordpress\GlyphsPluginDriver;
-use tiFy\Support\Proxy\Asset;
+use Pollen\TinyMce\TinyMceInterface;
 
 class FontawesomePlugin extends GlyphsPluginDriver
 {
     /**
-     * @param TinyMceContract $tinyMceManager
+     * @param TinyMceInterface $tinyMce
      */
-    public function __construct(TinyMceContract $tinyMceManager)
+    public function __construct(TinyMceInterface $tinyMce)
     {
-        parent::__construct($tinyMceManager);
+        parent::__construct($tinyMce);
 
         add_action(
             'admin_enqueue_scripts',
@@ -36,7 +35,7 @@ class FontawesomePlugin extends GlyphsPluginDriver
         );
 
         add_action('wp_head', function () {
-            asset()->setInlineCss(".fontawesome{font-family:'{$this->params('font-family')}';}");
+            Asset::setInlineCss(".fontawesome{font-family:'{$this->params('font-family')}';}");
         });
     }
 

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-/**
- * @mixin \Pollen\TinyMce\TinyMceAwareTrait
- * @mixin \tiFy\Support\Concerns\BootableTrait;
- * @mixin \tiFy\Support\Concerns\ParamsBagTrait;
- */
-interface PluginDriverInterface
+use Pollen\Http\ResponseInterface;
+use Pollen\Support\Concerns\BootableTraitInterface;
+use Pollen\Support\Concerns\ParamsBagAwareTraitInterface;
+
+interface PluginDriverInterface extends BootableTraitInterface, ParamsBagAwareTraitInterface, TinyMceProxyInterface
 {
     /**
      * Initialisation du controleur de plugin
@@ -94,7 +93,7 @@ interface PluginDriverInterface
      *
      * @param array ...$args
      *
-     * @return array
+     * @return ResponseInterface
      */
-    public function xhrResponse(...$args): array;
+    public function xhrResponse(...$args): ResponseInterface;
 }

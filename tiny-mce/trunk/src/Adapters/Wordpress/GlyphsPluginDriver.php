@@ -4,24 +4,17 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce\Adapters\Wordpress;
 
-use Pollen\TinyMce\Contracts\TinyMceContract;
 use Pollen\TinyMce\GlyphsPluginDriver as BaseGlyphsPluginDriver;
-use tiFy\Support\Proxy\Url;
+use Pollen\TinyMce\TinyMceInterface;
 
 abstract class GlyphsPluginDriver extends BaseGlyphsPluginDriver
 {
     /**
-     * Liste des glyphs contenu dans la feuille de style de la police glyphs.
-     * @var array
+     * @param TinyMceInterface $tinyMce
      */
-    protected $glyphs = [];
-
-    /**
-     * @param TinyMceContract $tinyMceManager
-     */
-    public function __construct(TinyMceContract $tinyMceManager)
+    public function __construct(TinyMceInterface $tinyMce)
     {
-        parent::__construct($tinyMceManager);
+        parent::__construct($tinyMce);
 
         add_action(
             'init',

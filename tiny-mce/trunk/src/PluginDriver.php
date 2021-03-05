@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-use Pollen\TinyMce\Contracts\TinyMceContract;
-use tiFy\Support\Concerns\BootableTrait;
-use tiFy\Support\Concerns\ParamsBagTrait;
+use Pollen\Http\JsonResponse;
+use Pollen\Http\ResponseInterface;
+use Pollen\Support\Concerns\BootableTrait;
+use Pollen\Support\Concerns\ParamsBagAwareTrait;
 
 abstract class PluginDriver implements PluginDriverInterface
 {
     use BootableTrait;
-    use ParamsBagTrait;
-    use TinyMceAwareTrait;
+    use ParamsBagAwareTrait;
+    use TinyMceProxy;
 
     /**
      * Alias de qualification du plugin.
@@ -21,11 +22,11 @@ abstract class PluginDriver implements PluginDriverInterface
     protected $alias = '';
 
     /**
-     * @param TinyMceContract $tinyMceManager
+     * @param TinyMceInterface $tinyMce
      */
-    public function __construct(TinyMceContract $tinyMceManager)
+    public function __construct(TinyMceInterface $tinyMce)
     {
-        $this->setTinyMce($tinyMceManager);
+        $this->setTinyMce($tinyMce);
     }
 
     /**
@@ -34,11 +35,12 @@ abstract class PluginDriver implements PluginDriverInterface
     public function boot(): PluginDriverInterface
     {
         if (!$this->isBooted()) {
-            events()->trigger('tiny-mce.plugin.booting', [$this->getAlias(), $this]);
+            //events()->trigger('tiny-mce.plugin.booting', [$this->getAlias(), $this]);
 
-            $this->parseParams()->setBooted();
+            $this->parseParams();
+            $this->setBooted();
 
-            events()->trigger('tiny-mce.plugin.booted', [$this->getAlias(), $this]);
+            //events()->trigger('tiny-mce.plugin.booted', [$this->getAlias(), $this]);
         }
         return $this;
     }
@@ -52,7 +54,7 @@ abstract class PluginDriver implements PluginDriverInterface
             /**
              * @var array|null $mce_init Paramètres de configuration généraux de tinyMce propre au plugin.
              */
-            'mce_init'    => null,
+            'mce_init' => null,
         ];
     }
 
@@ -69,7 +71,7 @@ abstract class PluginDriver implements PluginDriverInterface
      */
     public function getEditorCssSrc(): ?string
     {
-        return $this->tinyMce()->resources()->url("/assets/dist/css/plugins/{$this->getAlias()}/editor.css");
+        return $this->tinyMce()->resources("/assets/dist/css/plugins/{$this->getAlias()}/editor.css");
     }
 
     /**
@@ -77,7 +79,7 @@ abstract class PluginDriver implements PluginDriverInterface
      */
     public function getEditorJsSrc(): ?string
     {
-        return $this->tinyMce()->resources()->url("/assets/dist/js/plugins/{$this->getAlias()}/editor.js");
+        return $this->tinyMce()->resources("/assets/dist/js/plugins/{$this->getAlias()}/editor.js");
     }
 
     /**
@@ -85,7 +87,7 @@ abstract class PluginDriver implements PluginDriverInterface
      */
     public function getCssSrc(): ?string
     {
-        return $this->tinyMce()->resources()->url("/assets/dist/css/plugins/{$this->getAlias()}/plugin.css");
+        return $this->tinyMce()->resources("/assets/dist/css/plugins/{$this->getAlias()}/plugin.css");
     }
 
     /**
@@ -93,7 +95,7 @@ abstract class PluginDriver implements PluginDriverInterface
      */
     public function getJsSrc(): ?string
     {
-        return $this->tinyMce()->resources()->url("/assets/dist/js/plugins/{$this->getAlias()}/plugin.js");
+        return $this->tinyMce()->resources("/assets/dist/js/plugins/{$this->getAlias()}/plugin.js");
     }
 
     /**
@@ -101,7 +103,7 @@ abstract class PluginDriver implements PluginDriverInterface
      */
     public function getThemeCssSrc(): ?string
     {
-        return $this->tinyMce()->resources()->url("/assets/dist/css/plugins/{$this->getAlias()}/theme.css");
+        return $this->tinyMce()->resources("/assets/dist/css/plugins/{$this->getAlias()}/theme.css");
     }
 
     /**
@@ -109,7 +111,7 @@ abstract class PluginDriver implements PluginDriverInterface
      */
     public function getThemeJsSrc(): ?string
     {
-        return $this->tinyMce()->resources()->url("/assets/dist/js/plugins/{$this->getAlias()}/theme.js");
+        return $this->tinyMce()->resources("/assets/dist/js/plugins/{$this->getAlias()}/theme.js");
     }
 
     /**
@@ -123,12 +125,11 @@ abstract class PluginDriver implements PluginDriverInterface
     /**
      * @inheritDoc
      */
-    public function parseParams(): PluginDriverInterface
+    public function parseParams(): void
     {
         if ($mceInit = $this->params()->pull('mce_init')) {
             $this->tinyMce()->setMceInit($mceInit);
         }
-        return $this;
     }
 
     /**
@@ -144,20 +145,12 @@ abstract class PluginDriver implements PluginDriverInterface
     /**
      * @inheritDoc
      */
-    public function setParams(array $params): PluginDriverInterface
+    public function xhrResponse(...$args): ResponseInterface
     {
-        $this->params($params);
-
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function xhrResponse(...$args): array
-    {
-        return [
-            'success' => true,
-        ];
+        return new JsonResponse(
+            [
+                'success' => true,
+            ]
+        );
     }
 }

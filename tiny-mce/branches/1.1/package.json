@@ -1,5 +1,5 @@
 {
-  "name": "pollen-embed",
+  "name": "@pollen-solutions/tiny-mce",
   "version": "1.0.0",
   "main": "index.js",
   "directories": {

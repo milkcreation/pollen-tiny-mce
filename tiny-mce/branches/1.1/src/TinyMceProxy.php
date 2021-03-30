@@ -44,12 +44,10 @@ trait TinyMceProxy
      *
      * @param TinyMceInterface $tinyMce
      *
-     * @return static
+     * @return void
      */
-    public function setTinyMce(TinyMceInterface $tinyMce): self
+    public function setTinyMce(TinyMceInterface $tinyMce): void
     {
         $this->tinyMce = $tinyMce;
-
-        return $this;
     }
 }

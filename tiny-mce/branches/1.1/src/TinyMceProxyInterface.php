@@ -18,7 +18,7 @@ interface TinyMceProxyInterface
      *
      * @param TinyMceInterface $tinyMce
      *
-     * @return static|TinyMceProxy
+     * @return void
      */
-    public function setTinyMce(TinyMceInterface $tinyMce): self;
+    public function setTinyMce(TinyMceInterface $tinyMce): void;
 }

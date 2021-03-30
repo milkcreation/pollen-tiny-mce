@@ -101,7 +101,7 @@ class TinyMce implements TinyMceInterface
     {
         $this->setConfig($config);
 
-        if (!is_null($container)) {
+        if ($container !== null) {
             $this->setContainer($container);
         }
 
@@ -203,7 +203,11 @@ class TinyMce implements TinyMceInterface
         if (!$plugin instanceof PluginDriverInterface) {
             return null;
         }
-        return $this->plugins[$alias] = $plugin->setAlias($alias)->setParams($params);
+
+        $this->plugins[$alias] = $plugin->setAlias($alias);
+        $this->plugins[$alias]->setParams($params);
+
+        return $this->plugins[$alias];
     }
 
     /**

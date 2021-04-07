@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-use Psr\Container\ContainerInterface as Container;
+use Pollen\Support\StaticProxy;
 use RuntimeException;
 
 trait TinyMceProxy
@@ -23,16 +23,14 @@ trait TinyMceProxy
     public function tinyMce(): TinyMceInterface
     {
         if ($this->tinyMce === null) {
-            $container = method_exists($this, 'getContainer') ? $this->getContainer() : null;
-
-            if ($container instanceof Container && $container->has(TinyMceInterface::class)) {
-                $this->tinyMce = $container->get(TinyMceInterface::class);
-            } else {
-                try {
-                    $this->tinyMce = TinyMce::getInstance();
-                } catch(RuntimeException $e) {
-                    $this->tinyMce = new TinyMce();
-                }
+            try {
+                $this->tinyMce = TinyMce::getInstance();
+            } catch (RuntimeException $e) {
+                $this->tinyMce = StaticProxy::getProxyInstance(
+                    TinyMceInterface::class,
+                    TinyMce::class,
+                    method_exists($this, 'getContainer') ? $this->getContainer() : null
+                );
             }
         }
 

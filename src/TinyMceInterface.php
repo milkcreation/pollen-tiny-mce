@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-use League\Route\Http\Exception\NotFoundException;
 use Pollen\Support\Concerns\BootableTraitInterface;
 use Pollen\Support\Concerns\ConfigBagAwareTraitInterface;
+use Pollen\Support\Concerns\ResourcesAwareTraitInterface;
 use Pollen\Support\Proxy\ContainerProxyInterface;
 use Pollen\Support\Proxy\EventProxyInterface;
 use Pollen\Support\Proxy\RouterProxyInterface;
+use Pollen\Routing\Exception\NotFoundException;
 
 interface TinyMceInterface extends
     BootableTraitInterface,
     ConfigBagAwareTraitInterface,
+    ResourcesAwareTraitInterface,
     ContainerProxyInterface,
     EventProxyInterface,
     RouterProxyInterface
@@ -120,24 +122,6 @@ interface TinyMceInterface extends
      * @return static
      */
     public function registerPlugin(string $alias, $pluginDefinition): TinyMceInterface;
-
-    /**
-     * Chemin absolu vers une ressource (fichier|répertoire).
-     *
-     * @param string|null $path Chemin relatif vers la ressource.
-     *
-     * @return string
-     */
-    public function resources(?string $path = null): string;
-
-    /**
-     * Définition du chemin absolu vers le répertoire des ressources.
-     *
-     * @param string $resourceBaseDir
-     *
-     * @return static
-     */
-    public function setResourcesBaseDir(string $resourceBaseDir): TinyMceInterface;
 
     /**
      * Définition de l'adapteur associé.

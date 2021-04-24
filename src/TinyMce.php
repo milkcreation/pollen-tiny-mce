@@ -6,16 +6,16 @@ namespace Pollen\TinyMce;
 
 use Exception;
 use InvalidArgumentException;
-use League\Route\Http\Exception\NotFoundException;
 use Pollen\Routing\RouteInterface;
 use Pollen\Support\Concerns\BootableTrait;
 use Pollen\Support\Concerns\ConfigBagAwareTrait;
+use Pollen\Support\Concerns\ResourcesAwareTrait;
 use Pollen\Support\Exception\ManagerRuntimeException;
-use Pollen\Support\Filesystem;
 use Pollen\Support\Proxy\ContainerProxy;
 use Pollen\Support\Proxy\EventProxy;
 use Pollen\Support\Proxy\RouterProxy;
 use RuntimeException;
+use Pollen\Routing\Exception\NotFoundException;
 use Pollen\TinyMce\Plugins\FontawesomePlugin;
 use Pollen\TinyMce\Plugins\GlyphsPlugin;
 use Pollen\TinyMce\Plugins\TablePlugin;
@@ -23,11 +23,11 @@ use Pollen\TinyMce\Plugins\TemplatePlugin;
 use Pollen\TinyMce\Plugins\VisualblocksPlugin;
 use Psr\Container\ContainerInterface as Container;
 
-
 class TinyMce implements TinyMceInterface
 {
     use BootableTrait;
     use ConfigBagAwareTrait;
+    use ResourcesAwareTrait;
     use ContainerProxy;
     use EventProxy;
     use RouterProxy;
@@ -55,12 +55,6 @@ class TinyMce implements TinyMceInterface
         'template'     => TemplatePlugin::class,
         'visualblocks' => VisualblocksPlugin::class,
     ];
-
-    /**
-     * Chemin vers le répertoire des ressources.
-     * @var string|null
-     */
-    protected $resourcesBaseDir;
 
     /**
      * Route de traitement des requêtes XHR.
@@ -105,6 +99,8 @@ class TinyMce implements TinyMceInterface
         if ($container !== null) {
             $this->setContainer($container);
         }
+
+        $this->setResourcesBaseDir(dirname(__DIR__) . '/resources');
 
         if ($this->config('boot_enabled', true)) {
             $this->boot();
@@ -321,26 +317,6 @@ class TinyMce implements TinyMceInterface
     /**
      * @inheritDoc
      */
-    public function resources(?string $path = null): string
-    {
-        if ($this->resourcesBaseDir === null) {
-            $this->resourcesBaseDir = Filesystem::normalizePath(
-                realpath(
-                    dirname(__DIR__) . '/resources/'
-                )
-            );
-
-            if (!file_exists($this->resourcesBaseDir)) {
-                throw new RuntimeException('Field ressources directory unreachable');
-            }
-        }
-
-        return is_null($path) ? $this->resourcesBaseDir : $this->resourcesBaseDir . Filesystem::normalizePath($path);
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function setAdapter(TinyMceAdapterInterface $adapter): TinyMceInterface
     {
         $this->adapter = $adapter;
@@ -361,23 +337,15 @@ class TinyMce implements TinyMceInterface
     /**
      * @inheritDoc
      */
-    public function setResourcesBaseDir(string $resourceBaseDir): TinyMceInterface
-    {
-        $this->resourcesBaseDir = Filesystem::normalizePath($resourceBaseDir);
-
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function xhrResponseDispatcher(string $pluginAlias, string $controller, ...$args): array
     {
         try {
             $plugin = $this->getPlugin($pluginAlias);
         } catch (Exception $e) {
             throw new NotFoundException(
-                sprintf('TinyMce Plugin [%s] return exception : %s', $pluginAlias, $e->getMessage())
+                sprintf('TinyMce Plugin [%s] return exception : %s', $pluginAlias, $e->getMessage()),
+                'TinyMce Error',
+                $e
             );
         }
         if ($plugin !== null) {
@@ -385,13 +353,16 @@ class TinyMce implements TinyMceInterface
                 return $plugin->{$controller}(...$args);
             } catch (Exception $e) {
                 throw new NotFoundException(
-                    sprintf('TinyMce Plugin [%s] Controller [%s] call return exception', $controller, $pluginAlias)
+                    sprintf('TinyMce Plugin [%s] Controller [%s] call return exception', $controller, $pluginAlias),
+                    'TinyMce Error',
+                    $e
                 );
             }
         }
 
         throw new NotFoundException(
-            sprintf('TinyMce Plugin [%s] unreachable', $pluginAlias)
+            sprintf('TinyMce Plugin [%s] unreachable', $pluginAlias),
+            'TinyMce Error'
         );
     }
 }

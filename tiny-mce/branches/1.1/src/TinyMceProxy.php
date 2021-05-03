@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-use Pollen\Support\StaticProxy;
+use Pollen\Support\ProxyResolver;
 use RuntimeException;
 
 trait TinyMceProxy
@@ -26,7 +26,7 @@ trait TinyMceProxy
             try {
                 $this->tinyMce = TinyMce::getInstance();
             } catch (RuntimeException $e) {
-                $this->tinyMce = StaticProxy::getProxyInstance(
+                $this->tinyMce = ProxyResolver::getInstance(
                     TinyMceInterface::class,
                     TinyMce::class,
                     method_exists($this, 'getContainer') ? $this->getContainer() : null

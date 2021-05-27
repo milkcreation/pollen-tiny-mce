@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pollen\TinyMce;
 
-use Pollen\Container\BaseServiceProvider;
+use Pollen\Container\BootableServiceProvider;
 use Pollen\TinyMce\Adapters\WordpressAdapter;
 use Pollen\TinyMce\Plugins\FontawesomePlugin;
 use Pollen\TinyMce\Plugins\GlyphsPlugin;
@@ -12,7 +12,7 @@ use Pollen\TinyMce\Plugins\TablePlugin;
 use Pollen\TinyMce\Plugins\TemplatePlugin;
 use Pollen\TinyMce\Plugins\VisualblocksPlugin;
 
-class TinyMceServiceProvider extends BaseServiceProvider
+class TinyMceServiceProvider extends BootableServiceProvider
 {
     /**
      * @inheritDoc
